@@ -1,0 +1,244 @@
+{{ 'component-price.css' | asset_url | stylesheet_tag }}
+
+{%- liquid
+  assign shop_coll = collection
+  if shop_coll == blank
+    assign shop_coll = collections['shop-all']
+  endif
+-%}
+
+{%- paginate shop_coll.products by 12 -%}
+  <div class="wiya-store">
+    <header class="wiya-store__head">
+      <h1 class="wiya-store__title">Shop</h1>
+      <p class="wiya-store__count">{{ shop_coll.products_count }} {{ shop_coll.products_count | pluralize: 'piece', 'pieces' }}</p>
+    </header>
+
+    <div class="wiya-store__toolbar">
+      <label class="wiya-store__sort" for="WiyaSort">
+        Sort
+        <select id="WiyaSort">
+          <option value="featured" selected>Featured</option>
+          <option value="title">Name</option>
+          <option value="price-asc">Price, low to high</option>
+          <option value="price-desc">Price, high to low</option>
+        </select>
+      </label>
+    </div>
+
+    {%- if shop_coll.products.size == 0 -%}
+      <p class="wiya-store__empty">No pieces yet.</p>
+    {%- else -%}
+      <ul class="wiya-store__grid" role="list">
+        {%- for product in shop_coll.products -%}
+          {%- assign variant = product.selected_or_first_available_variant -%}
+          <li class="wiya-store__card" data-title="{{ product.title | downcase | escape }}" data-price="{{ variant.price }}">
+            <a class="wiya-store__photo" href="{{ product.url }}">
+              {%- if product.featured_media -%}
+                {%- assign shop_alt = product.featured_media.alt | default: product.title -%}
+                {{
+                  product.featured_media
+                  | image_url: width: 900
+                  | image_tag:
+                    class: 'wiya-store__img',
+                    widths: '360, 540, 720, 900',
+                    sizes: '(min-width: 990px) 28vw, 50vw',
+                    alt: shop_alt
+                }}
+              {%- endif -%}
+            </a>
+            <div class="wiya-store__ticket">
+              <h2 class="wiya-store__name">
+                <a href="{{ product.url }}">{{ product.title | escape }}</a>
+              </h2>
+              <p class="wiya-store__price">{{ variant.price | money }}</p>
+              <form class="wiya-store__bag" action="{{ routes.cart_add_url }}" method="post">
+                <input type="hidden" name="id" value="{{ variant.id }}">
+                <input type="hidden" name="quantity" value="1">
+                <button type="submit" name="add" {% unless product.available %}disabled{% endunless %}>
+                  {%- if product.available -%}Add to bag{%- else -%}Unavailable{%- endif -%}
+                </button>
+              </form>
+            </div>
+          </li>
+        {%- endfor -%}
+      </ul>
+    {%- endif -%}
+
+    {%- if paginate.pages > 1 -%}
+      <nav class="wiya-store__pages" aria-label="Pagination">{{ paginate | default_pagination }}</nav>
+    {%- endif -%}
+  </div>
+{%- endpaginate -%}
+
+<script>
+  document.getElementById('WiyaSort')?.addEventListener('change', function () {
+    const grid = document.querySelector('.wiya-store__grid');
+    if (!grid) return;
+    const cards = Array.from(grid.children);
+    const mode = this.value;
+    cards.sort(function (a, b) {
+      if (mode === 'title') return a.dataset.title.localeCompare(b.dataset.title);
+      if (mode === 'price-asc') return Number(a.dataset.price) - Number(b.dataset.price);
+      if (mode === 'price-desc') return Number(b.dataset.price) - Number(a.dataset.price);
+      return 0;
+    });
+    cards.forEach(function (card) { grid.appendChild(card); });
+  });
+</script>
+
+{% stylesheet %}
+  .wiya-store {
+    background: #fff1eb;
+    color: #221d20;
+    width: min(120rem, calc(100% - 3rem));
+    margin: 0 auto;
+    padding: 3.2rem 0 6rem;
+  }
+
+  .wiya-store__head {
+    text-align: center;
+    margin-bottom: 2.4rem;
+  }
+
+  .wiya-store__title {
+    margin: 0;
+    font-family: var(--font-heading-family);
+    font-size: 3.6rem;
+    letter-spacing: 0.08em;
+    color: #46161d;
+  }
+
+  .wiya-store__count {
+    margin: 0.8rem 0 0;
+    font-size: 1.3rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #907961;
+  }
+
+  .wiya-store__toolbar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 2.4rem;
+  }
+
+  .wiya-store__sort {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-size: 1.2rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #907961;
+  }
+
+  .wiya-store__sort select {
+    background: #fff1eb;
+    color: #221d20;
+    border: 0.1rem solid rgba(34, 29, 32, 0.18);
+    padding: 0.6rem 0.8rem;
+    font: inherit;
+  }
+
+  .wiya-store__grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2.4rem 1.2rem;
+  }
+
+  .wiya-store__photo {
+    display: block;
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+    background: #c6b4a8;
+  }
+
+  .wiya-store__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .wiya-store__ticket {
+    padding: 1.2rem 0 0;
+  }
+
+  .wiya-store__name {
+    margin: 0;
+    font-family: var(--font-heading-family);
+    font-size: 1.6rem;
+    font-weight: 400;
+  }
+
+  .wiya-store__name a {
+    color: #46161d;
+    text-decoration: none;
+  }
+
+  .wiya-store__price {
+    margin: 0.5rem 0 1rem;
+    color: #221d20;
+    font-size: 1.4rem;
+  }
+
+  .wiya-store__bag button {
+    width: 100%;
+    background: #46161d;
+    color: #fff1eb;
+    border: none;
+    padding: 0.9rem 1rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-size: 1.1rem;
+    cursor: pointer;
+  }
+
+  .wiya-store__bag button:hover {
+    background: #83333a;
+  }
+
+  .wiya-store__bag button[disabled] {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .wiya-store__empty,
+  .wiya-store__pages {
+    margin-top: 2rem;
+    text-align: center;
+  }
+
+  @media screen and (min-width: 750px) {
+    .wiya-store {
+      width: min(120rem, calc(100% - 6rem));
+      padding-top: 4rem;
+    }
+
+    .wiya-store__title {
+      font-size: 4.8rem;
+    }
+
+    .wiya-store__grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 3.2rem 2rem;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "WIYA shop catalog",
+  "tag": "section",
+  "class": "wiya-shop-section",
+  "settings": [],
+  "presets": [
+    {
+      "name": "WIYA shop catalog"
+    }
+  ]
+}
+{% endschema %}

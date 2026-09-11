@@ -1,0 +1,9 @@
+{
+  "sections": {
+    "catalog": {
+      "type": "wiya-shop-catalog",
+      "settings": {}
+    }
+  },
+  "order": ["catalog"]
+}

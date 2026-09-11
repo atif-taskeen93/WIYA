@@ -1,0 +1,7 @@
+.cursor/
+.DS_Store
+Thumbs.db
+.env
+.env.*
+*.zip
+node_modules/

@@ -1,0 +1,129 @@
+{%- liquid
+  assign shop_url = '/collections/shop-all'
+-%}
+
+<nav class="wiya-shop-nav page-width" aria-label="Shop categories">
+  <p class="wiya-shop-nav__count">{{ collection.products_count }} {{ collection.products_count | pluralize: 'piece', 'pieces' }}</p>
+  <ul class="wiya-shop-nav__list" role="list">
+    {%- for block in section.blocks -%}
+      {%- liquid
+        assign href = block.settings.link
+        assign label = block.settings.label
+        assign is_active = false
+        if href == blank and block.settings.collection != blank
+          assign href = block.settings.collection.url
+          if label == blank
+            assign label = block.settings.collection.title
+          endif
+        endif
+        if href == blank
+          assign href = shop_url
+        endif
+        if label == blank
+          assign label = 'All'
+        endif
+        if collection.handle == block.settings.collection.handle
+          assign is_active = true
+        elsif block.settings.collection == blank and collection.handle == 'shop-all'
+          assign is_active = true
+        endif
+      -%}
+      <li>
+        <a
+          class="wiya-shop-nav__link{% if is_active %} wiya-shop-nav__link--active{% endif %}"
+          href="{{ href }}"
+          {% if is_active %}aria-current="page"{% endif %}
+          {{ block.shopify_attributes }}
+        >
+          {{ label | escape }}
+        </a>
+      </li>
+    {%- endfor -%}
+  </ul>
+</nav>
+
+{% stylesheet %}
+  .wiya-shop-nav {
+    padding-top: 0.8rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 0.1rem solid rgba(34, 29, 32, 0.1);
+    margin-bottom: 0.8rem;
+  }
+
+  .wiya-shop-nav__count {
+    margin: 0 0 1.2rem;
+    text-align: center;
+    font-size: 1.3rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #907961;
+  }
+
+  .wiya-shop-nav__list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.8rem 0.4rem;
+    list-style: none;
+    margin: 0;
+    padding: 0 0 1.6rem;
+  }
+
+  .wiya-shop-nav__link {
+    display: inline-block;
+    padding: 0.8rem 1.4rem;
+    font-size: 1.3rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: #221d20;
+    border: 0.1rem solid transparent;
+  }
+
+  .wiya-shop-nav__link:hover {
+    color: #46161d;
+  }
+
+  .wiya-shop-nav__link--active {
+    color: #46161d;
+    border-color: #46161d;
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "WIYA shop nav",
+  "tag": "section",
+  "class": "section",
+  "max_blocks": 8,
+  "settings": [],
+  "blocks": [
+    {
+      "type": "category",
+      "name": "Category",
+      "settings": [
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Label"
+        },
+        {
+          "type": "collection",
+          "id": "collection",
+          "label": "Collection"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Link"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "WIYA shop nav"
+    }
+  ]
+}
+{% endschema %}
