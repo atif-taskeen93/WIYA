@@ -5,7 +5,7 @@
       "blocks": {},
       "block_order": [],
       "settings": {
-        "image": "shopify://shop_images/wiya-hero-side.jpg",
+        "image": "shopify://shop_images/wiya-hero-hq.jpg",
         "image_overlay_opacity": 0,
         "image_height": "large",
         "desktop_content_position": "middle-center",
@@ -50,7 +50,7 @@
       "type": "wiya-brand-band",
       "settings": {
         "image": "shopify://shop_images/wiya-parallax-brand.jpg",
-        "text": "<p>Shop softness, structure, and intention — pieces made to be felt before they’re seen.</p>",
+        "text": "<p>Grace with an Edge — pieces made to be felt before they’re seen.</p>",
         "button_label": "Shop",
         "button_link": "/pages/shop"
       }

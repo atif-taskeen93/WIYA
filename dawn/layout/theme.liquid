@@ -52,6 +52,8 @@
     <script src="{{ 'constants.js' | asset_url }}" defer="defer"></script>
     <script src="{{ 'pubsub.js' | asset_url }}" defer="defer"></script>
     <script src="{{ 'global.js' | asset_url }}" defer="defer"></script>
+    {{ 'wiya-currency.css' | asset_url | stylesheet_tag }}
+    <script src="{{ 'wiya-currency.js' | asset_url }}" defer="defer"></script>
     <script src="{{ 'cart-disclosure-modal.js' | asset_url }}" defer="defer"></script>
     <script src="{{ 'cart-disclosure-tooltip.js' | asset_url }}" defer="defer"></script>
     <script src="{{ 'details-disclosure.js' | asset_url }}" defer="defer"></script>
@@ -66,6 +68,80 @@
     {{ content_for_header }}
     <style>
       .header__heading-logo { max-height: 36px; width: auto; }
+      .header__heading-logo-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.25rem;
+      }
+      .header__heading-link {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        text-decoration: none;
+      }
+      .wiya-tagline {
+        display: block;
+        font-family: var(--font-body-family);
+        font-weight: 400;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: #907961;
+        line-height: 1.2;
+      }
+      .wiya-tagline--header {
+        font-size: 0.85rem;
+        white-space: nowrap;
+      }
+      @media screen and (min-width: 750px) {
+        .wiya-tagline--header {
+          font-size: 0.95rem;
+          letter-spacing: 0.2em;
+        }
+      }
+      @media screen and (max-width: 749px) {
+        .section-header .header {
+          padding-top: 0.6rem !important;
+          padding-bottom: 0.6rem !important;
+          min-height: 0;
+        }
+        .header__heading-logo {
+          max-height: 26px;
+        }
+        .header__heading-logo-wrapper {
+          gap: 0.1rem;
+        }
+        .wiya-tagline--header {
+          font-size: 0.65rem;
+          letter-spacing: 0.12em;
+        }
+        .header__icons {
+          gap: 0.2rem;
+        }
+        .header__icon,
+        .header__icon--cart .icon,
+        .header__icon .svg-wrapper,
+        .header__icon .svg-wrapper svg {
+          width: 3.6rem;
+          height: 3.6rem;
+        }
+        .header__search,
+        .header__icon--account,
+        shopify-account.header__icon {
+          display: none !important;
+        }
+        .wiya-currency {
+          margin-right: 0;
+        }
+        .wiya-currency__button {
+          min-height: 3.2rem;
+          font-size: 1rem;
+          padding: 0.2rem 0;
+        }
+        header-drawer {
+          margin-left: -0.4rem;
+        }
+      }
       .card__heading { font-family: var(--font-heading-family); letter-spacing: 0.02em; }
       body.template-collection,
       body.template-page-shop {

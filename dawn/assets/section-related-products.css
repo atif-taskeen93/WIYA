@@ -4,4 +4,9 @@
 
 .related-products__heading {
   margin: 0 0 3rem;
+  font-family: var(--font-heading-family);
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-align: center;
+  color: #46161d;
 }

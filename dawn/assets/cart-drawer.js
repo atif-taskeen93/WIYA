@@ -15,14 +15,65 @@ class CartDrawer extends HTMLElement {
     cartLink.setAttribute('aria-haspopup', 'dialog');
     cartLink.addEventListener('click', (event) => {
       event.preventDefault();
-      this.open(cartLink);
+      this.refreshFromServer().then(() => this.open(cartLink));
     });
     cartLink.addEventListener('keydown', (event) => {
       if (event.code.toUpperCase() === 'SPACE') {
         event.preventDefault();
-        this.open(cartLink);
+        this.refreshFromServer().then(() => this.open(cartLink));
       }
     });
+  }
+
+  refreshFromServer() {
+    const root = window.Shopify?.routes?.root || '/';
+    return fetch(`${root}?sections=cart-drawer,cart-icon-bubble`)
+      .then((response) => response.json())
+      .then((sections) => this.renderContents({ sections }))
+      .catch((error) => console.error(error));
+  }
+
+  updateCartIcon(sectionHtml) {
+    const icon = document.getElementById('cart-icon-bubble');
+    if (!icon) return Promise.resolve();
+
+    if (sectionHtml) {
+      const parsed = new DOMParser().parseFromString(sectionHtml, 'text/html');
+      const fresh = parsed.querySelector('#cart-icon-bubble') || parsed.querySelector('.shopify-section');
+      if (fresh) {
+        icon.innerHTML = fresh.innerHTML;
+        return Promise.resolve();
+      }
+    }
+
+    return this.refreshCartCount();
+  }
+
+  refreshCartCount() {
+    const root = window.Shopify?.routes?.root || '/';
+    return fetch(`${root}cart.js`)
+      .then((response) => response.json())
+      .then((cart) => {
+        const icon = document.getElementById('cart-icon-bubble');
+        if (!icon || !cart) return cart;
+
+        let bubble = icon.querySelector('.cart-count-bubble');
+        if (cart.item_count > 0) {
+          if (!bubble) {
+            bubble = document.createElement('div');
+            bubble.className = 'cart-count-bubble';
+            bubble.innerHTML =
+              '<span aria-hidden="true"></span><span class="visually-hidden">Items in cart</span>';
+            icon.appendChild(bubble);
+          }
+          const num = bubble.querySelector('[aria-hidden="true"]');
+          if (num) num.textContent = cart.item_count < 100 ? String(cart.item_count) : '';
+        } else if (bubble) {
+          bubble.remove();
+        }
+        return cart;
+      })
+      .catch((error) => console.error(error));
   }
 
   open(triggeredBy) {
@@ -77,22 +128,22 @@ class CartDrawer extends HTMLElement {
   }
 
   renderContents(parsedState) {
-    this.querySelector('.drawer__inner').classList.contains('is-empty') &&
-      this.querySelector('.drawer__inner').classList.remove('is-empty');
-    this.productId = parsedState.id;
-    this.getSectionsToRender().forEach((section) => {
-      const sectionElement = section.selector
-        ? document.querySelector(section.selector)
-        : document.getElementById(section.id);
+    if (!parsedState?.sections) return;
+    this.classList.remove('is-empty');
+    const inner = this.querySelector('.drawer__inner');
+    if (inner) inner.classList.remove('is-empty');
 
-      if (!sectionElement) return;
-      sectionElement.innerHTML = this.getSectionInnerHTML(parsedState.sections[section.id], section.selector);
-    });
+    const drawerHtml = parsedState.sections['cart-drawer'];
+    if (drawerHtml && inner) {
+      const freshInner = this.getSectionDOM(drawerHtml, '.drawer__inner');
+      if (freshInner) inner.innerHTML = freshInner.innerHTML;
+    }
 
-    setTimeout(() => {
-      this.querySelector('#CartDrawer-Overlay').addEventListener('click', this.close.bind(this));
-      this.open();
-    });
+    this.updateCartIcon(parsedState.sections['cart-icon-bubble']);
+    this.querySelector('cart-drawer-items')?.classList.remove('is-empty');
+    this.querySelector('#CartDrawer-Overlay')?.addEventListener('click', this.close.bind(this));
+    if (typeof window.WiyaCurrencyConvert === 'function') window.WiyaCurrencyConvert();
+    document.dispatchEvent(new CustomEvent('wiya:currency-refresh'));
   }
 
   getSectionInnerHTML(html, selector = '.shopify-section') {

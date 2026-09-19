@@ -32,14 +32,8 @@ if (!customElements.get('product-form')) {
         delete config.headers['Content-Type'];
 
         const formData = new FormData(this.form);
-        if (this.cart) {
-          formData.append(
-            'sections',
-            this.cart.getSectionsToRender().map((section) => section.id)
-          );
-          formData.append('sections_url', window.location.pathname);
-          this.cart.setActiveElement(document.activeElement);
-        }
+        formData.append('sections', 'cart-drawer,cart-icon-bubble');
+        formData.append('sections_url', window.location.pathname);
         config.body = formData;
 
         const variantId = formData.get('id');
@@ -67,43 +61,29 @@ if (!customElements.get('product-form')) {
               soldOutMessage.classList.remove('hidden');
               this.error = true;
               return;
-            } else if (!this.cart) {
-              this.resolveCartLinesUpdate(linesUpdateDeferred);
-              window.location = window.routes.cart_url;
-              return;
             }
 
             this.resolveCartLinesUpdate(linesUpdateDeferred);
+            this.error = false;
+
+            if (this.cart) this.cart.classList.remove('is-empty');
+            if (this.cart && typeof this.cart.renderContents === 'function' && response.sections && response.sections['cart-drawer']) {
+              this.cart.renderContents({ sections: response.sections });
+            } else if (this.cart && typeof this.cart.updateCartIcon === 'function') {
+              this.cart.updateCartIcon(response.sections && response.sections['cart-icon-bubble']);
+            }
 
             const startMarker = CartPerformance.createStartingMarker('add:wait-for-subscribers');
-            if (!this.error)
-              publish(PUB_SUB_EVENTS.cartUpdate, {
-                source: 'product-form',
-                productVariantId: variantId,
-                cartData: response,
-              }).then(() => {
-                CartPerformance.measureFromMarker('add:wait-for-subscribers', startMarker);
-              });
-            this.error = false;
+            publish(PUB_SUB_EVENTS.cartUpdate, {
+              source: 'product-form',
+              productVariantId: variantId,
+              cartData: response,
+            }).then(() => {
+              CartPerformance.measureFromMarker('add:wait-for-subscribers', startMarker);
+            });
+
             const quickAddModal = this.closest('quick-add-modal');
-            if (quickAddModal) {
-              document.body.addEventListener(
-                'modalClosed',
-                () => {
-                  setTimeout(() => {
-                    CartPerformance.measure("add:paint-updated-sections", () => {
-                      this.cart.renderContents(response);
-                    });
-                  });
-                },
-                { once: true }
-              );
-              quickAddModal.hide(true);
-            } else {
-              CartPerformance.measure("add:paint-updated-sections", () => {
-                this.cart.renderContents(response);
-              });
-            }
+            if (quickAddModal) quickAddModal.hide(true);
           })
           .catch((e) => {
             console.error(e);
@@ -115,6 +95,15 @@ if (!customElements.get('product-form')) {
             if (this.cart && this.cart.classList.contains('is-empty')) this.cart.classList.remove('is-empty');
             if (!this.error) this.submitButton.removeAttribute('aria-disabled');
             this.querySelector('.loading__spinner').classList.add('hidden');
+
+            // WIYA: brief "Added" confirmation instead of auto-opening the cart drawer.
+            if (!this.error && this.submitButtonText) {
+              const previousLabel = this.submitButtonText.textContent;
+              this.submitButtonText.textContent = 'Added \u2713';
+              setTimeout(() => {
+                this.submitButtonText.textContent = previousLabel;
+              }, 1600);
+            }
 
             CartPerformance.measureFromEvent("add:user-action", evt);
           });

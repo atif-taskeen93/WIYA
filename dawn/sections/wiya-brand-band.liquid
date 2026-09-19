@@ -25,6 +25,7 @@
           sizes: '280px'
       }}
     {%- endif -%}
+    {% render 'wiya-tagline', class: 'wiya-tagline--band' %}
     {%- if section.settings.text != blank -%}
       <div class="wiya-brand-band__text rte">{{ section.settings.text }}</div>
     {%- endif -%}
@@ -87,10 +88,21 @@
 
   .wiya-brand-band__logo {
     display: block;
-    margin: 0 auto 2.4rem;
+    margin: 0 auto 1.2rem;
     height: 72px;
     width: auto;
     filter: drop-shadow(0 1px 0 rgba(255, 241, 235, 0.8));
+  }
+
+  .wiya-tagline--band {
+    display: block;
+    margin: 0 0 1.8rem;
+    font-family: var(--font-heading-family);
+    font-size: 1.6rem;
+    font-weight: 400;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: #fff1eb;
   }
 
   .wiya-brand-band__text,

@@ -1,0 +1,265 @@
+{{ 'wiya-product.css' | asset_url | stylesheet_tag }}
+
+{%- liquid
+  assign current = product.selected_or_first_available_variant
+  assign material = product.metafields.custom.material.value | default: shop.metafields.custom.material.value
+  assign care = product.metafields.custom.care.value | default: shop.metafields.custom.care.value
+  assign size_chart = product.metafields.custom.size_chart.value | default: shop.metafields.custom.size_chart.value
+  assign description = product.description
+
+  assign variant_payload = '['
+  for variant in product.variants
+    if forloop.first == false
+      assign variant_payload = variant_payload | append: ','
+    endif
+    assign size_label = variant.title
+    case variant.title
+      when 'XS'
+        assign size_label = '6 (XS)'
+      when 'S'
+        assign size_label = '8 (S)'
+      when 'M'
+        assign size_label = '10 (M)'
+      when 'L'
+        assign size_label = '12 (L)'
+      when 'XL'
+        assign size_label = '14 (XL)'
+    endcase
+    assign sku_value = variant.sku | default: product.handle | upcase
+    assign variant_payload = variant_payload | append: '{"id":' | append: variant.id | append: ',"title":"' | append: size_label | append: '","price":' | append: variant.price | append: ',"available":' | append: variant.available | append: ',"sku":"' | append: sku_value | append: '"}'
+  endfor
+  assign variant_payload = variant_payload | append: ']'
+-%}
+
+{%- capture current_size -%}
+  {%- case current.title -%}
+    {%- when 'XS' -%}6 (XS)
+    {%- when 'S' -%}8 (S)
+    {%- when 'M' -%}10 (M)
+    {%- when 'L' -%}12 (L)
+    {%- when 'XL' -%}14 (XL)
+    {%- else -%}{{ current.title }}
+  {%- endcase -%}
+{%- endcapture -%}
+
+<div
+  class="wiya-pdp"
+  data-wiya-pdp
+  data-variants="{{ variant_payload | escape }}"
+>
+  <div class="wiya-pdp__shell">
+    <nav class="wiya-pdp__crumb" aria-label="Breadcrumb">
+      <a href="{{ routes.root_url }}">Home</a>
+      <span>/</span>
+      <span>{{ product.title | escape }}</span>
+    </nav>
+
+    <div class="wiya-pdp__grid">
+      <div class="wiya-pdp__gallery">
+        {%- assign first_media = product.featured_media | default: product.media.first -%}
+        {%- if product.media.size > 1 -%}
+          <ul class="wiya-pdp__thumbs" role="list">
+            {%- for media in product.media -%}
+              <li>
+                <button
+                  type="button"
+                  data-wiya-thumb
+                  data-full="{{ media.preview_image | image_url: width: 900 }}"
+                  class="{% if forloop.first %}is-active{% endif %}"
+                  aria-label="View image {{ forloop.index }}"
+                >
+                  <img
+                    src="{{ media.preview_image | image_url: width: 160 }}"
+                    alt="{{ media.alt | default: product.title | escape }}"
+                    width="80"
+                    height="107"
+                    loading="eager"
+                    decoding="async"
+                  >
+                </button>
+              </li>
+            {%- endfor -%}
+          </ul>
+        {%- endif -%}
+        <div class="wiya-pdp__stage-wrap">
+          {%- if product.media.size > 1 -%}
+            <button class="wiya-pdp__nav wiya-pdp__nav--prev" type="button" data-wiya-prev aria-label="Previous image">‹</button>
+            <button class="wiya-pdp__nav wiya-pdp__nav--next" type="button" data-wiya-next aria-label="Next image">›</button>
+          {%- endif -%}
+          {%- if first_media -%}
+            <img
+              class="wiya-pdp__main"
+              data-wiya-stage
+              src="{{ first_media.preview_image | image_url: width: 900 }}"
+              alt="{{ product.title | escape }}"
+              width="900"
+              height="1200"
+              fetchpriority="high"
+              loading="eager"
+              decoding="async"
+            >
+          {%- endif -%}
+        </div>
+      </div>
+
+      <div class="wiya-pdp__info">
+        <h1 class="wiya-pdp__title">{{ product.title | escape }}</h1>
+        <p class="wiya-pdp__sku">
+          SKU:
+          <span data-wiya-sku data-fallback="{{ product.handle | upcase | escape }}">
+            {{ current.sku | default: product.handle | upcase | escape }}
+          </span>
+        </p>
+        <p class="wiya-pdp__price" data-wiya-price data-wiya-amount="{{ current.price }}">{{ current.price | money }}</p>
+
+        {%- form 'product', product, id: 'WiyaProductForm', data-wiya-pdp-form: true, novalidate: 'novalidate' -%}
+          <input type="hidden" name="id" value="{{ current.id }}" data-wiya-variant>
+
+          {%- unless product.has_only_default_variant -%}
+            <label class="wiya-pdp__label" for="WiyaSize-{{ section.id }}">
+              Size:
+              <span data-wiya-size-live>{{ current_size | strip }}</span>
+            </label>
+            <select class="wiya-pdp__select" id="WiyaSize-{{ section.id }}" data-wiya-size>
+              {%- for variant in product.variants -%}
+                {%- liquid
+                  assign option_label = variant.title
+                  case variant.title
+                    when 'XS'
+                      assign option_label = '6 (XS)'
+                    when 'S'
+                      assign option_label = '8 (S)'
+                    when 'M'
+                      assign option_label = '10 (M)'
+                    when 'L'
+                      assign option_label = '12 (L)'
+                    when 'XL'
+                      assign option_label = '14 (XL)'
+                  endcase
+                -%}
+                <option
+                  value="{{ variant.id }}"
+                  {% if variant == current %}selected{% endif %}
+                  {% unless variant.available %}disabled{% endunless %}
+                >
+                  {{ option_label }}{% unless variant.available %} (Sold out){% endunless %}
+                </option>
+              {%- endfor -%}
+            </select>
+          {%- endunless -%}
+
+          <p class="wiya-pdp__subtotal">
+            Subtotal:
+            <strong data-wiya-subtotal data-wiya-amount="{{ current.price }}">{{ current.price | money }}</strong>
+          </p>
+
+          <div class="wiya-pdp__qty-row">
+            <span class="wiya-pdp__label" style="margin:0">Quantity:</span>
+            <div class="wiya-pdp__qty">
+              <button type="button" data-wiya-qty-btn="-1" aria-label="Decrease quantity">−</button>
+              <input
+                data-wiya-qty
+                type="number"
+                name="quantity"
+                value="1"
+                min="1"
+                inputmode="numeric"
+              >
+              <button type="button" data-wiya-qty-btn="1" aria-label="Increase quantity">+</button>
+            </div>
+          </div>
+
+          <button
+            class="wiya-pdp__add"
+            type="submit"
+            name="add"
+            data-wiya-add-btn
+            {% unless current.available %}disabled{% endunless %}
+          >
+            {%- if current.available -%}Add to cart{%- else -%}Sold out{%- endif -%}
+          </button>
+        {%- endform -%}
+
+        <button class="wiya-pdp__share" type="button" data-wiya-share>Share</button>
+
+        <div class="wiya-pdp__acc">
+          {%- if material != blank -%}
+            <details>
+              <summary>Material</summary>
+              <div class="wiya-pdp__acc-body rte">{{ material | newline_to_br }}</div>
+            </details>
+          {%- endif -%}
+          {%- if description != blank -%}
+            <details>
+              <summary>Description</summary>
+              <div class="wiya-pdp__acc-body rte">{{ description }}</div>
+            </details>
+          {%- endif -%}
+          {%- if care != blank -%}
+            <details>
+              <summary>Care Instructions</summary>
+              <div class="wiya-pdp__acc-body rte">{{ care | newline_to_br }}</div>
+            </details>
+          {%- endif -%}
+          {%- if size_chart != blank -%}
+            <details>
+              <summary>Size Chart</summary>
+              <div class="wiya-pdp__acc-body rte">
+                {%- if size_chart contains '|' -%}
+                  <table class="wiya-pdp__chart">
+                    {%- assign chart_rows = size_chart | newline_to_br | split: '<br />' -%}
+                    {%- for row in chart_rows -%}
+                      {%- assign cells = row | split: '|' -%}
+                      {%- if forloop.first -%}
+                        <thead>
+                          <tr>
+                            {%- for cell in cells -%}
+                              <th>{{ cell | strip }}</th>
+                            {%- endfor -%}
+                          </tr>
+                        </thead>
+                        <tbody>
+                      {%- else -%}
+                        <tr>
+                          {%- for cell in cells -%}
+                            <td>{{ cell | strip }}</td>
+                          {%- endfor -%}
+                        </tr>
+                      {%- endif -%}
+                    {%- endfor -%}
+                    </tbody>
+                  </table>
+                {%- else -%}
+                  <div class="wiya-pdp__chart-copy">{{ size_chart | newline_to_br }}</div>
+                {%- endif -%}
+              </div>
+            </details>
+          {%- endif -%}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wiya-pdp__sticky">
+    <strong data-wiya-price data-wiya-amount="{{ current.price }}">{{ current.price | money }}</strong>
+    <button class="wiya-pdp__add" type="submit" form="WiyaProductForm" data-wiya-add-btn>
+      Add to cart
+    </button>
+  </div>
+
+  <div class="wiya-pdp__zoom" data-wiya-zoom hidden>
+    <button class="wiya-pdp__zoom-close" type="button" aria-label="Close">×</button>
+    <img data-wiya-zoom-img alt="{{ product.title | escape }}">
+  </div>
+</div>
+
+<script src="{{ 'wiya-product.js' | asset_url }}" defer="defer"></script>
+
+{% schema %}
+{
+  "name": "WIYA product",
+  "tag": "section",
+  "class": "wiya-product-section",
+  "settings": []
+}
+{% endschema %}

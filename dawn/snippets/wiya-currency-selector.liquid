@@ -1,0 +1,33 @@
+{%- comment -%}
+  WIYA currency selector — converts storefront + cart drawer prices by region.
+  Shopify checkout stays in shop currency (PKR) until presentment currencies are enabled in Admin.
+{%- endcomment -%}
+<wiya-currency class="wiya-currency">
+  <button
+    type="button"
+    class="wiya-currency__button"
+    aria-expanded="false"
+    aria-haspopup="listbox"
+    aria-controls="WiyaCurrencyList"
+  >
+    <span class="wiya-currency__code" data-wiya-currency-label>PKR</span>
+    <span class="wiya-currency__caret" aria-hidden="true"></span>
+  </button>
+  <ul
+    id="WiyaCurrencyList"
+    class="wiya-currency__list"
+    role="listbox"
+    hidden
+  >
+    <li role="option" tabindex="-1" data-currency="AED">AED</li>
+    <li role="option" tabindex="-1" data-currency="AUD">AUD</li>
+    <li role="option" tabindex="-1" data-currency="CAD">CAD</li>
+    <li role="option" tabindex="-1" data-currency="EGP">EGP</li>
+    <li role="option" tabindex="-1" data-currency="EUR">EUR</li>
+    <li role="option" tabindex="-1" data-currency="GBP">GBP</li>
+    <li role="option" tabindex="-1" data-currency="PKR" aria-selected="true">PKR</li>
+    <li role="option" tabindex="-1" data-currency="SAR">SAR</li>
+    <li role="option" tabindex="-1" data-currency="SGD">SGD</li>
+    <li role="option" tabindex="-1" data-currency="USD">USD</li>
+  </ul>
+</wiya-currency>
