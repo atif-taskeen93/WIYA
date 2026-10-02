@@ -123,9 +123,29 @@
   color: #907961;
 }
 
-.wiya-pdp__price {
+.wiya-pdp__price,
+.wiya-pdp__sticky-price {
   margin: 0 0 2rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  align-items: baseline;
   font-size: 1.8rem;
+  color: #221d20;
+}
+
+.wiya-pdp__sticky-price {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.wiya-pdp__compare {
+  color: #8a7b70;
+  text-decoration: line-through;
+  font-weight: 400;
+}
+
+.wiya-pdp__sale {
   color: #221d20;
 }
 
@@ -270,9 +290,20 @@
   white-space: pre-line;
 }
 
+.wiya-pdp__chart-caption {
+  margin: 1.2rem 0 0.4rem;
+  font-size: 1.3rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.wiya-pdp__chart-caption:first-child {
+  margin-top: 0;
+}
+
 .wiya-pdp__chart {
   width: 100%;
-  margin-top: 0.8rem;
+  margin: 0.4rem 0 1.2rem;
   border-collapse: collapse;
   font-size: 1.3rem;
 }

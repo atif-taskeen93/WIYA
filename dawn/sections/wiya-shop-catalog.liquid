@@ -153,7 +153,12 @@
               {%- if excerpt != blank -%}
                 <p class="wiya-store__copy">{{ excerpt | escape }}</p>
               {%- endif -%}
-              <p class="wiya-store__price" data-wiya-amount="{{ variant.price }}">{{ variant.price | money }}</p>
+              <p class="wiya-store__price">
+                {%- if variant.compare_at_price > variant.price -%}
+                  <s class="wiya-store__compare" data-wiya-amount="{{ variant.compare_at_price }}">{{ variant.compare_at_price | money }}</s>
+                {%- endif -%}
+                <span class="wiya-store__sale" data-wiya-amount="{{ variant.price }}">{{ variant.price | money }}</span>
+              </p>
             </div>
           </li>
         {%- endfor -%}
@@ -510,7 +515,20 @@
 
   .wiya-store__price {
     margin: 1rem 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    align-items: baseline;
     font-size: 1.4rem;
+    color: #221d20;
+  }
+
+  .wiya-store__compare {
+    color: #8a7b70;
+    text-decoration: line-through;
+  }
+
+  .wiya-store__sale {
     color: #221d20;
   }
 

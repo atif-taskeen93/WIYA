@@ -26,7 +26,8 @@
         assign size_label = '14 (XL)'
     endcase
     assign sku_value = variant.sku | default: product.handle | upcase
-    assign variant_payload = variant_payload | append: '{"id":' | append: variant.id | append: ',"title":"' | append: size_label | append: '","price":' | append: variant.price | append: ',"available":' | append: variant.available | append: ',"sku":"' | append: sku_value | append: '"}'
+    assign compare_value = variant.compare_at_price | default: 0
+    assign variant_payload = variant_payload | append: '{"id":' | append: variant.id | append: ',"title":"' | append: size_label | append: '","price":' | append: variant.price | append: ',"compareAtPrice":' | append: compare_value | append: ',"available":' | append: variant.available | append: ',"sku":"' | append: sku_value | append: '"}'
   endfor
   assign variant_payload = variant_payload | append: ']'
 -%}
@@ -110,7 +111,14 @@
             {{ current.sku | default: product.handle | upcase | escape }}
           </span>
         </p>
-        <p class="wiya-pdp__price" data-wiya-price data-wiya-amount="{{ current.price }}">{{ current.price | money }}</p>
+        <p class="wiya-pdp__price">
+          {%- if current.compare_at_price > current.price -%}
+            <s class="wiya-pdp__compare" data-wiya-compare data-wiya-amount="{{ current.compare_at_price }}">{{ current.compare_at_price | money }}</s>
+          {%- else -%}
+            <s class="wiya-pdp__compare" data-wiya-compare data-wiya-amount="0" hidden></s>
+          {%- endif -%}
+          <span class="wiya-pdp__sale" data-wiya-price data-wiya-amount="{{ current.price }}">{{ current.price | money }}</span>
+        </p>
 
         {%- form 'product', product, id: 'WiyaProductForm', data-wiya-pdp-form: true, novalidate: 'novalidate' -%}
           <input type="hidden" name="id" value="{{ current.id }}" data-wiya-variant>
@@ -206,29 +214,49 @@
               <summary>Size Chart</summary>
               <div class="wiya-pdp__acc-body rte">
                 {%- if size_chart contains '|' -%}
-                  <table class="wiya-pdp__chart">
-                    {%- assign chart_rows = size_chart | newline_to_br | split: '<br />' -%}
+                  {%- assign chart_sections = size_chart | split: '---' -%}
+                  {%- for section in chart_sections -%}
+                    {%- assign section_text = section | strip -%}
+                    {%- if section_text == blank -%}{%- continue -%}{%- endif -%}
+                    {%- assign chart_rows = section_text | newline_to_br | split: '<br />' -%}
+                    {%- assign table_started = false -%}
                     {%- for row in chart_rows -%}
-                      {%- assign cells = row | split: '|' -%}
-                      {%- if forloop.first -%}
-                        <thead>
+                      {%- assign row_text = row | strip -%}
+                      {%- if row_text == blank -%}{%- continue -%}{%- endif -%}
+                      {%- if row_text contains '|' -%}
+                        {%- assign cells = row_text | split: '|' -%}
+                        {%- unless table_started -%}
+                          <table class="wiya-pdp__chart">
+                            <thead>
+                              <tr>
+                                {%- for cell in cells -%}
+                                  <th>{{ cell | strip }}</th>
+                                {%- endfor -%}
+                              </tr>
+                            </thead>
+                            <tbody>
+                          {%- assign table_started = true -%}
+                        {%- else -%}
                           <tr>
                             {%- for cell in cells -%}
-                              <th>{{ cell | strip }}</th>
+                              <td>{{ cell | strip }}</td>
                             {%- endfor -%}
                           </tr>
-                        </thead>
-                        <tbody>
+                        {%- endunless -%}
                       {%- else -%}
-                        <tr>
-                          {%- for cell in cells -%}
-                            <td>{{ cell | strip }}</td>
-                          {%- endfor -%}
-                        </tr>
+                        {%- if table_started -%}
+                            </tbody>
+                          </table>
+                          {%- assign table_started = false -%}
+                        {%- endif -%}
+                        <p class="wiya-pdp__chart-caption"><strong>{{ row_text }}</strong></p>
                       {%- endif -%}
                     {%- endfor -%}
-                    </tbody>
-                  </table>
+                    {%- if table_started -%}
+                        </tbody>
+                      </table>
+                    {%- endif -%}
+                  {%- endfor -%}
                 {%- else -%}
                   <div class="wiya-pdp__chart-copy">{{ size_chart | newline_to_br }}</div>
                 {%- endif -%}
@@ -241,7 +269,14 @@
   </div>
 
   <div class="wiya-pdp__sticky">
-    <strong data-wiya-price data-wiya-amount="{{ current.price }}">{{ current.price | money }}</strong>
+    <div class="wiya-pdp__sticky-price">
+      {%- if current.compare_at_price > current.price -%}
+        <s class="wiya-pdp__compare" data-wiya-compare data-wiya-amount="{{ current.compare_at_price }}">{{ current.compare_at_price | money }}</s>
+      {%- else -%}
+        <s class="wiya-pdp__compare" data-wiya-compare data-wiya-amount="0" hidden></s>
+      {%- endif -%}
+      <strong data-wiya-price data-wiya-amount="{{ current.price }}">{{ current.price | money }}</strong>
+    </div>
     <button class="wiya-pdp__add" type="submit" form="WiyaProductForm" data-wiya-add-btn>
       Add to cart
     </button>

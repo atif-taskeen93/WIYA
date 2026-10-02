@@ -5,3 +5,4 @@ Thumbs.db
 .env.*
 *.zip
 node_modules/
+shopify-ops/

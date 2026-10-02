@@ -11,6 +11,7 @@
   const form = root.querySelector('[data-wiya-pdp-form]');
   const variantInput = root.querySelector('[data-wiya-variant]');
   const priceEls = root.querySelectorAll('[data-wiya-price]');
+  const compareEls = root.querySelectorAll('[data-wiya-compare]');
   const subtotalEl = root.querySelector('[data-wiya-subtotal]');
   const skuEl = root.querySelector('[data-wiya-sku]');
   const addBtns = root.querySelectorAll('[data-wiya-add-btn]');
@@ -68,6 +69,19 @@
     const variant = currentVariant();
     if (!variant) return;
     if (variantInput) variantInput.value = variant.id;
+    const compareAt = Number(variant.compareAtPrice || 0);
+    const onSale = compareAt > Number(variant.price);
+    compareEls.forEach((el) => {
+      if (onSale) {
+        el.hidden = false;
+        el.textContent = money(compareAt);
+        el.setAttribute('data-wiya-amount', String(compareAt));
+      } else {
+        el.hidden = true;
+        el.textContent = '';
+        el.setAttribute('data-wiya-amount', '0');
+      }
+    });
     priceEls.forEach((el) => {
       el.textContent = money(variant.price);
       el.setAttribute('data-wiya-amount', variant.price);
